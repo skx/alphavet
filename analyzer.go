@@ -20,7 +20,7 @@ var Analyzer = &analysis.Analyzer{
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 }
 
-// Type Function represents a function definition which
+// Function represents a function definition which
 // has been encountered when scanning the source code.
 //
 // We want to differentiate between function calls that have
