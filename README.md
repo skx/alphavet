@@ -1,3 +1,7 @@
+[![GoDoc](https://img.shields.io/static/v1?label=godoc&message=reference&color=blue)](https://pkg.go.dev/github.com/skx/alphavet)
+[![Go Report Card](https://goreportcard.com/badge/github.com/skx/alphavet)](https://goreportcard.com/report/github.com/skx/alphavet)
+[![license](https://img.shields.io/github/license/skx/alphavet.svg)](https://github.com/skx/alphavet/blob/master/LICENSE)
+
 # alphavet
 
 This is a simple linter which is designed to report upon functions which are not implemented in alphabetical order within files.
