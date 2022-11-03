@@ -4,7 +4,7 @@ package main
 import (
 	"flag"
 
-	"github.com/skx/alphavet/analyzer"
+	"github.com/skx/alphavet"
 	"golang.org/x/tools/go/analysis/singlechecker"
 )
 
