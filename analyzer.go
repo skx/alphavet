@@ -40,9 +40,9 @@ type Function struct {
 	Receiver string
 }
 
-// run is driven by the analysis framework and gets passed instances
-// of function definitions.
-func run(pass *analysis.Pass) (interface{}, error) {
+// findFunctions will use the analysis package to return a list of
+// all the functions which were found in the specified package(s).
+func findFunctions(pass *analysis.Pass) []*Function {
 
 	// We're going to analyze things
 	inspector := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
@@ -52,11 +52,11 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		(*ast.FuncDecl)(nil),
 	}
 
-	// Create a list of all the functions we've found
+	// The a list of all the functions we've found will be returned
+	// to the caller.
 	seen := []*Function{}
 
-	// Now update that list with all the function definitions
-	// we encounter, in order.
+	// Add to the list all the function definitions we encounter, in order.
 	inspector.Preorder(nodeFilter, func(node ast.Node) {
 
 		// Get the node, in the right type
@@ -90,13 +90,25 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		seen = append(seen, tmp)
 	})
 
+	// Return the list
+	return seen
+}
+
+// run is driven by the analysis framework and gets passed instances
+// of function definitions.
+func run(pass *analysis.Pass) (interface{}, error) {
+
 	//
-	// Now we've processed all the functions.
+	// Find the functions in the package(s) we've been
+	// asked to lint/vet.
 	//
-	// We want to build up a list of files we've seen.
+	seen := findFunctions(pass)
+
+	//
+	// We want to find the unique filename we've seen.
 	//
 	// Remember we're invoked on "packages", but packages
-	// may contain multiple files.
+	// may be implemented by multiple files.
 	//
 	files := make(map[string]bool)
 	for _, fnc := range seen {
