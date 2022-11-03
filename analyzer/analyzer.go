@@ -149,8 +149,8 @@ func run(pass *analysis.Pass) (interface{}, error) {
 
 				if (seen[ent.Receiver] != nil) && (ent.Name < seen[ent.Receiver].Name) {
 					pass.Reportf(ent.Position,
-						"function %s%s should have been before %s%s",
-						ent.Receiver, ent.Name, seen[ent.Receiver].Receiver, seen[ent.Receiver].Name)
+						"function %s on receiver %s should have been before %s",
+						ent.Name, ent.Receiver, seen[ent.Receiver].Name)
 				}
 				seen[ent.Receiver] = ent
 			}
