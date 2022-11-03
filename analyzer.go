@@ -20,7 +20,28 @@ var Analyzer = &analysis.Analyzer{
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 }
 
-// run is driven by the analysis framework, via the configuration above.
+// Type Function represents a function definition which
+// has been encountered when scanning the source code.
+//
+// We want to differentiate between function calls that have
+// receivers, and those that don't so we store some extra
+// details here.
+type Function struct {
+	// The file containing the function.
+	File string
+
+	// The name of the function.
+	Name string
+
+	// The position within our source where this object was.
+	Position token.Pos
+
+	// The receiver, if any, for the function.
+	Receiver string
+}
+
+// run is driven by the analysis framework and gets passed instances
+// of function definitions.
 func run(pass *analysis.Pass) (interface{}, error) {
 
 	// We're going to analyze things
@@ -29,22 +50,6 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	// But only functions
 	nodeFilter := []ast.Node{
 		(*ast.FuncDecl)(nil),
-	}
-
-	// We want to differentiate between function calls that have
-	// receivers, and those that don't
-	type Function struct {
-		// The file containing the function
-		File string
-
-		// The name of the function.
-		Name string
-
-		// The position within our source where this object was.
-		Position token.Pos
-
-		// The receiver, if any, for the function
-		Receiver string
 	}
 
 	// Create a list of all the functions we've found
@@ -88,19 +93,20 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	//
 	// Now we've processed all the functions.
 	//
-	// We want to build up a list of files to operate upon
-	// then a list of functions.
+	// We want to build up a list of files we've seen.
+	//
+	// Remember we're invoked on "packages", but packages
+	// may contain multiple files.
 	//
 	files := make(map[string]bool)
 	for _, fnc := range seen {
-
 		files[fnc.File] = true
 	}
 
 	//
-	// Now we have a list of unique filenames
+	// Now we have a list of unique filenames.
 	//
-	// Process each one
+	// Process each one.
 	//
 	for fn := range files {
 
@@ -119,6 +125,8 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		// to the appropriate slice
 		//
 		for _, ent := range seen {
+
+			// Not for this file?  Skip for now
 			if ent.File != fn {
 				continue
 			}
