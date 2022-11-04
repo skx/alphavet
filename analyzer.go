@@ -5,12 +5,24 @@ package analyzer
 import (
 	"go/ast"
 	"go/token"
+	"sort"
+	"strings"
 
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
 
 	"golang.org/x/tools/go/analysis"
 )
+
+// exclude is the list of files to exclude
+var exclude stringSetFlag
+
+func init() {
+	exclude.Set("init,main")
+	Analyzer.Flags.Var(&exclude, "exclude",
+		"comma-separated list of functions to exclude from the ordering test.")
+
+}
 
 // Analyzer configures our function.
 var Analyzer = &analysis.Analyzer{
@@ -40,6 +52,17 @@ type Function struct {
 	Receiver string
 }
 
+// excludeFunction determines if the given function should be excluded
+// from our alphabetical constraints.
+//
+// Typically we'd exclude "init", and "main".  Optionally the user might
+// disable this, or add more exclusions.
+func excludeFunction(name string) bool {
+
+	_, found := exclude[name]
+	return found
+}
+
 // findFunctions will use the analysis package to return a list of
 // all the functions which were found in the specified package(s).
 func findFunctions(pass *analysis.Pass) []*Function {
@@ -61,6 +84,10 @@ func findFunctions(pass *analysis.Pass) []*Function {
 
 		// Get the node, in the right type
 		funcDecl := node.(*ast.FuncDecl)
+
+		if excludeFunction(funcDecl.Name.Name) {
+			return
+		}
 
 		// Build up any (optional) receiver
 		recv := ""
@@ -115,12 +142,19 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		files[fnc.File] = true
 	}
 
+	sortedFiles := make([]string, 0, len(files))
+
+	for k := range files {
+		sortedFiles = append(sortedFiles, k)
+	}
+	sort.Strings(sortedFiles)
+
 	//
 	// Now we have a list of unique filenames.
 	//
 	// Process each one.
 	//
-	for fn := range files {
+	for _, fn := range sortedFiles {
 
 		//
 		// Function names we've seen that have a receiver
@@ -192,4 +226,29 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	}
 
 	return nil, nil
+}
+
+type stringSetFlag map[string]bool
+
+func (ss *stringSetFlag) String() string {
+	var items []string
+	for item := range *ss {
+		items = append(items, item)
+	}
+	sort.Strings(items)
+	return strings.Join(items, ",")
+}
+
+func (ss *stringSetFlag) Set(s string) error {
+	m := make(map[string]bool) // clobber previous value
+	if s != "" {
+		for _, name := range strings.Split(s, ",") {
+			if name == "" {
+				continue // TODO: report error? proceed?
+			}
+			m[name] = true
+		}
+	}
+	*ss = m
+	return nil
 }

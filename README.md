@@ -24,9 +24,6 @@ The motivation behind this tool was twofold:
 * Once I realized a linter, driven by "`go vet`", could be named "alphavet" I couldn't resist the temptation to hack it up.
   * Even though this could just has easily have been a portable Perl script.
 
-**NOTE** That the two functions `init` and `main` are excluded from the alphabetical ordering requirement.
-
-* If there is interest/demand I could make a similiar, optional, exclusion for `New` and `NewXXX` functions in the future.
 
 
 
@@ -47,6 +44,13 @@ The linter is designed to be driven by `go vet` like so:
 ```sh
 $ go vet -vettool=$(which alphavet) ./...
 ```
+
+By default the two functions `init` and `main` are excluded from the alphabetical ordering requirement.   If you wish to exclude additional functions you may do so, via the `-exclude` parameter:
+
+```sh
+$ go vet -vettool=$(which alphavet) -exclude=init,main,New ./...
+```
+
 
 
 # Sample Output
